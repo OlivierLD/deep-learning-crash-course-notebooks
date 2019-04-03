@@ -32,17 +32,15 @@ print(keras.__version__)
 print("Getting to the data...")
 df = pd.read_csv('../data/insurance-customers-1500.csv', sep=';')
 
+y = df['group']
+df.drop('group', axis='columns', inplace=True)
+X = df.as_matrix()
+
 print("Data read")
 df.head()
 df.describe()
 
 print("Ok...")
-
-# same split of input and output columns as before
-
-y = df['group']
-df.drop('group', axis='columns', inplace=True)
-X = df.as_matrix()
 
 from sklearn.model_selection import train_test_split
 
@@ -53,13 +51,6 @@ X_train, X_test, y_train, y_test = \
   train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
 X_train.shape, y_train.shape, X_test.shape, y_test.shape
-
-# we have (almost) the same number of samples per categoery
-# in the training...
-np.unique(y_train, return_counts=True)
-
-# ... and test dataset
-np.unique(y_test, return_counts=True)
 
 # ignore this, it is just technical code to plot decision boundaries
 # Adapted from:
@@ -179,52 +170,40 @@ def linear_regression(data):
     y_pred = regr.predict(x)
     return x, y_pred, regr.coef_
 
-plot_prediction(None, X_train[:, 1], X_train[:, 0],
-               'Age', 'Max Speed', y_train, mesh=False,
-                title="Train Data")
-
-plot_prediction(None, X_test[:, 1], X_test[:, 0],
-               'Age', 'Max Speed', y_test, mesh=False,
-                title="Test Data")
-
 X_train_2_dim = X_train[:, :2]
 X_test_2_dim = X_test[:, :2]
 
 num_categories = 3
 
+from tensorflow.keras.layers import Dense, Dropout, \
+                                    BatchNormalization, Activation
+
+dropout = 0.6
 model = keras.Sequential()
 
-from tensorflow.keras.layers import Dense
+model.add(Dense(500, name='hidden1', input_dim=2))
+# model.add(BatchNormalization())
+model.add(Activation('relu'))
+# model.add(Dropout(dropout))
 
-model.add(Dense(500, name='hidden1', activation='tanh', input_dim=2))
-model.add(Dense(500, name='hidden2', activation='tanh'))
+model.add(Dense(500, name='hidden2'))
+# model.add(BatchNormalization())
+model.add(Activation('relu'))
+# model.add(Dropout(dropout))
 
 model.add(Dense(num_categories, name='softmax', activation='softmax'))
-
-model.summary()
-
-plot_prediction(model, X_train_2_dim[:, 1], X_train_2_dim[:, 0],
-               'Age', 'Max Speed', y_train,
-                title="Untrained")
 
 model.compile(loss='sparse_categorical_crossentropy',
              optimizer='adam',
              metrics=['accuracy'])
+model.summary()
 
-# only if you are running this locally
-
-# https://keras.io/callbacks/#tensorboard
-tb_callback = tf.keras.callbacks.TensorBoard(log_dir='./tf_log')
-# To start tensorboard
-# tensorboard --logdir=./tf_log
-# open http://localhost:6006
-
+# reducing batch size might increase overfitting,
+# but might be necessary to reduce memory requirements
 BATCH_SIZE=1000
-EPOCHS = 5000
 
-# only if you are running this locally
-# !rm -rf ./tf_log
-# %time model.fit(X_train_2_dim, y_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2, callbacks=[tb_callback])
+# reduce this based on what you see in the training history
+EPOCHS = 10000
 
 print(">> model.fit !!")
 # %time history = model.fit(X_train_2_dim, y_train, \
@@ -243,6 +222,9 @@ test_accuracy
 
 plot_history(history)
 
+# sometimes it is not so easy if we still have a change, plot a line through the data
+plot_history(history, plot_line=True, init_phase_samples=100)
+
 plot_prediction(model, X_train_2_dim[:, 1], X_train_2_dim[:, 0],
                'Age', 'Max Speed', y_train,
                 title="Train Data")
@@ -250,3 +232,7 @@ plot_prediction(model, X_train_2_dim[:, 1], X_train_2_dim[:, 0],
 plot_prediction(model, X_test_2_dim[:, 1], X_test_2_dim[:, 0],
                'Age', 'Max Speed', y_test,
                 title="Test Data")
+
+model.save('insurance.h5')
+
+# !ls -l insurance.h5

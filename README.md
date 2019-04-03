@@ -22,6 +22,8 @@ https://djcordhose.github.io/deep-learning-crash-course-notebooks/
 
 These notebooks have been created using Python 3.6 and TensorFlow 1.11
 
+> Note: In Google Colab below, to execute a cell and go to the next one, use a [Shift] + [Return]
+
 * Unit 3:
     * [Notebook 3.3: Getting to know our data](https://colab.research.google.com/github/djcordhose/deep-learning-crash-course-notebooks/blob/master/U3-M3-data.ipynb)
     * [Notebook 3.5: Introduction to Neural Networks with TensorFlow and Keras Layers](https://colab.research.google.com/github/djcordhose/deep-learning-crash-course-notebooks/blob/master/U3-M5-nn-intro.ipynb)
